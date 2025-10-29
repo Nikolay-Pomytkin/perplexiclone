@@ -127,28 +127,35 @@ export default function ChatMessage({ message, isLoading, isCompact }: { message
               )}
 
               {/* Tab content */}
-              {activeTab === 'answer' && (
-                <Answer markdown={message.content} onCitationClick={handleCitationClick} isCompact={isCompact} />
-              )}
-              {activeTab === 'sources' && hasSources && (
-                <div className={isCompact ? 'py-1' : 'py-2'}>
-                  <Sources items={message.sources} highlightedIndex={highlightedSource} isCompact={isCompact} />
-                </div>
-              )}
-              {activeTab === 'images' && (
-                <div className={isCompact ? 'py-2' : 'py-4'}>
-                  {hasImages ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {message.images.map((image, idx) => (
-                        <ImageCard key={`${image.url}-${idx}`} image={image} compact={false} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted-foreground text-sm">
-                      No images found
+              {(hasSources || hasImages) ? (
+                <>
+                  {activeTab === 'answer' && (
+                    <Answer markdown={message.content} onCitationClick={handleCitationClick} isCompact={isCompact} />
+                  )}
+                  {activeTab === 'sources' && hasSources && (
+                    <div className={isCompact ? 'py-1' : 'py-2'}>
+                      <Sources items={message.sources} highlightedIndex={highlightedSource} isCompact={isCompact} />
                     </div>
                   )}
-                </div>
+                  {activeTab === 'images' && (
+                    <div className={isCompact ? 'py-2' : 'py-4'}>
+                      {hasImages ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {message.images.map((image, idx) => (
+                            <ImageCard key={`${image.url}-${idx}`} image={image} compact={false} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center text-muted-foreground text-sm">
+                          No images found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* No tabs, just show the answer */
+                <Answer markdown={message.content} onCitationClick={handleCitationClick} isCompact={isCompact} />
               )}
 
               <div className={`flex items-center gap-2 ${isCompact ? 'mt-2 text-[10px]' : 'mt-3 text-xs'} text-muted-foreground`}>
