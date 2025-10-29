@@ -17,6 +17,7 @@ const BodySchema = z.object({
   user_id: z.string().uuid(),
   thread_id: z.string().uuid().optional(),
   model: z.string().optional(),
+  stream: z.boolean().optional(),
 });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -27,7 +28,7 @@ export const Route = createFileRoute('/api/ask')({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { query, user_id, thread_id, model } = BodySchema.parse(body);
+          const { query, user_id, thread_id, model, stream } = BodySchema.parse(body);
           const db = getDb();
           await ensureDbInitialized();
 
@@ -96,29 +97,94 @@ export const Route = createFileRoute('/api/ask')({
           // Add current query
           conversationHistory.push({ role: 'user', content: user });
 
-          // 5) Ask LLM
-          const completion = await openai.chat.completions.create({
-            model: model || "gpt-4o-mini",
-            messages: conversationHistory,
-            temperature: 0.2,
+          // Save user message immediately
+          await db.insert(messages).values({
+            id: uuidv4(),
+            threadId: currentThreadId,
+            role: 'user',
+            content: query,
+            sources: null,
+            images: null,
+            model: null,
           });
 
-          const answer_md = completion.choices[0]?.message?.content?.trim() || "No answer.";
-
-          // 6) Save messages to DB
-          const messageId = uuidv4();
           const selectedModel = model || "gpt-4o-mini";
-          await db.insert(messages).values([
-            {
-              id: uuidv4(),
-              threadId: currentThreadId,
-              role: 'user',
-              content: query,
-              sources: null,
-              images: null,
-              model: null,
-            },
-            {
+
+          // 5) Handle streaming or non-streaming response
+          if (stream) {
+            // Streaming mode
+            const encoder = new TextEncoder();
+            const streamResponse = new ReadableStream({
+              async start(controller) {
+                try {
+                  // Send metadata first
+                  const metadata = {
+                    sources: results,
+                    images: imageResults,
+                    thread_id: currentThreadId,
+                  };
+                  controller.enqueue(encoder.encode(`event: metadata\ndata: ${JSON.stringify(metadata)}\n\n`));
+
+                  // Stream from OpenAI
+                  const stream = await openai.chat.completions.create({
+                    model: selectedModel,
+                    messages: conversationHistory,
+                    temperature: 0.2,
+                    stream: true,
+                  });
+
+                  let fullContent = '';
+                  for await (const chunk of stream) {
+                    const content = chunk.choices[0]?.delta?.content || '';
+                    if (content) {
+                      fullContent += content;
+                      controller.enqueue(encoder.encode(`event: token\ndata: ${JSON.stringify({ content })}\n\n`));
+                    }
+                  }
+
+                  // Save complete message to DB
+                  const messageId = uuidv4();
+                  await db.insert(messages).values({
+                    id: messageId,
+                    threadId: currentThreadId,
+                    role: 'assistant',
+                    content: fullContent,
+                    sources: JSON.stringify(results),
+                    images: imageResults.length > 0 ? JSON.stringify(imageResults) : null,
+                    model: selectedModel,
+                  });
+
+                  // Send done event
+                  controller.enqueue(encoder.encode(`event: done\ndata: ${JSON.stringify({ message_id: messageId })}\n\n`));
+                  controller.close();
+                } catch (error: any) {
+                  const errorMsg = error?.message || "Streaming error";
+                  controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: errorMsg })}\n\n`));
+                  controller.close();
+                }
+              },
+            });
+
+            return new Response(streamResponse, {
+              headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+              },
+            });
+          } else {
+            // Non-streaming mode (original behavior)
+            const completion = await openai.chat.completions.create({
+              model: selectedModel,
+              messages: conversationHistory,
+              temperature: 0.2,
+            });
+
+            const answer_md = completion.choices[0]?.message?.content?.trim() || "No answer.";
+
+            // Save assistant message to DB
+            const messageId = uuidv4();
+            await db.insert(messages).values({
               id: messageId,
               threadId: currentThreadId,
               role: 'assistant',
@@ -126,18 +192,18 @@ export const Route = createFileRoute('/api/ask')({
               sources: JSON.stringify(results),
               images: imageResults.length > 0 ? JSON.stringify(imageResults) : null,
               model: selectedModel,
-            },
-          ]);
+            });
 
-          const payload: AskResponse = {
-            answer_md,
-            sources: results,
-            images: imageResults,
-            thread_id: currentThreadId,
-            message_id: messageId,
-          };
+            const payload: AskResponse = {
+              answer_md,
+              sources: results,
+              images: imageResults,
+              thread_id: currentThreadId,
+              message_id: messageId,
+            };
 
-          return json(payload);
+            return json(payload);
+          }
         } catch (err: any) {
           const msg = err?.message || "Unknown error";
           return json({ error: msg }, { status: 400 });

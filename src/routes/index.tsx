@@ -26,6 +26,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [isCompact, setIsCompact] = useState(false);
+  const [streaming, setStreaming] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   // Initialize user ID
   useEffect(() => {
@@ -36,6 +38,22 @@ function App() {
     }
     setUserId(storedUserId);
   }, []);
+
+  // Initialize theme
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light');
+    setTheme(initialTheme);
+    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+  }, []);
+
+  const handleToggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
 
   // Load threads when user ID is available
   useEffect(() => {
@@ -76,7 +94,7 @@ function App() {
     loadMessages();
   }, [currentThreadId, userId]);
 
-  const handleSendMessage = async (query: string, model: string) => {
+  const handleSendMessage = async (query: string, model: string, useStreaming: boolean) => {
     if (!userId) return;
 
     setLoading(true);
@@ -91,9 +109,10 @@ function App() {
       created_at: Math.floor(Date.now() / 1000),
     };
     
-    // Add loading message
+    // Add loading/streaming message
+    const tempAssistantId = 'temp-assistant-' + Date.now();
     const tempLoadingMessage: Message = {
-      id: 'temp-loading-' + Date.now(),
+      id: tempAssistantId,
       thread_id: currentThreadId || '',
       role: 'assistant',
       content: 'Searching, scraping, and synthesizing...',
@@ -103,41 +122,153 @@ function App() {
     setMessages(prev => [...prev, tempUserMessage, tempLoadingMessage]);
     
     try {
-      const r = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          query,
-          user_id: userId,
-          thread_id: currentThreadId || undefined,
-          model,
-        })
-      });
-      
-      if (!r.ok) {
-        const errorData = await r.json();
-        throw new Error(errorData.error || "Failed to fetch answer");
-      }
-      
-      const data: AskResponse = await r.json();
-      
-      // If we created a new thread, update threads list and set as current
-      if (!currentThreadId && data.thread_id) {
-        setCurrentThreadId(data.thread_id);
-        // Reload threads to get the new one
-        const threadsRes = await fetch(`/api/threads?user_id=${userId}`);
-        if (threadsRes.ok) {
-          const threadsData = await threadsRes.json();
-          setThreads(threadsData.threads || []);
+      if (useStreaming) {
+        // Streaming mode
+        const r = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            query,
+            user_id: userId,
+            thread_id: currentThreadId || undefined,
+            model,
+            stream: true,
+          })
+        });
+        
+        if (!r.ok) {
+          throw new Error("Failed to fetch answer");
         }
-      }
 
-      // Reload messages to show the new ones (this will replace temp messages)
-      if (data.thread_id) {
-        const messagesRes = await fetch(`/api/threads/${data.thread_id}`);
-        if (messagesRes.ok) {
-          const messagesData = await messagesRes.json();
-          setMessages(messagesData.messages || []);
+        const reader = r.body?.getReader();
+        const decoder = new TextDecoder();
+        
+        if (!reader) {
+          throw new Error("No reader available");
+        }
+
+        let buffer = '';
+        let accumulatedContent = '';
+        let metadata: { sources?: any[], images?: any[], thread_id?: string } = {};
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              // Skip event type lines
+              continue;
+            }
+            
+            if (line.startsWith('data:')) {
+              const data = line.substring(5).trim();
+              if (!data) continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                
+                // Handle different event types based on the data structure
+                if (parsed.sources || parsed.images || parsed.thread_id) {
+                  // This is metadata
+                  metadata = parsed;
+                  
+                  // Update thread if new
+                  if (!currentThreadId && parsed.thread_id) {
+                    setCurrentThreadId(parsed.thread_id);
+                    // Reload threads
+                    const threadsRes = await fetch(`/api/threads?user_id=${userId}`);
+                    if (threadsRes.ok) {
+                      const threadsData = await threadsRes.json();
+                      setThreads(threadsData.threads || []);
+                    }
+                  }
+                  
+                  // Update the temp message with sources and images, but keep loading text
+                  setMessages(prev => prev.map(m => 
+                    m.id === tempAssistantId 
+                      ? { 
+                          ...m, 
+                          sources: parsed.sources || undefined,
+                          images: parsed.images || undefined,
+                          content: '' // Clear loading message when we get metadata
+                        }
+                      : m
+                  ));
+                } else if (parsed.content !== undefined) {
+                  // This is a token
+                  accumulatedContent += parsed.content;
+                  setMessages(prev => prev.map(m => 
+                    m.id === tempAssistantId 
+                      ? { ...m, content: accumulatedContent }
+                      : m
+                  ));
+                } else if (parsed.message_id) {
+                  // This is done event
+                  finalMessageId = parsed.message_id;
+                } else if (parsed.error) {
+                  // This is an error event
+                  throw new Error(parsed.error);
+                }
+              } catch (e) {
+                console.error('Failed to parse SSE data:', e);
+              }
+            }
+          }
+        }
+
+        // After streaming completes, reload messages from DB to get the final saved version
+        const threadIdToUse = metadata.thread_id || currentThreadId;
+        if (threadIdToUse) {
+          const messagesRes = await fetch(`/api/threads/${threadIdToUse}`);
+          if (messagesRes.ok) {
+            const messagesData = await messagesRes.json();
+            setMessages(messagesData.messages || []);
+          }
+        }
+      } else {
+        // Non-streaming mode (original behavior)
+        const r = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            query,
+            user_id: userId,
+            thread_id: currentThreadId || undefined,
+            model,
+            stream: false,
+          })
+        });
+        
+        if (!r.ok) {
+          const errorData = await r.json();
+          throw new Error(errorData.error || "Failed to fetch answer");
+        }
+        
+        const data: AskResponse = await r.json();
+        
+        // If we created a new thread, update threads list and set as current
+        if (!currentThreadId && data.thread_id) {
+          setCurrentThreadId(data.thread_id);
+          // Reload threads to get the new one
+          const threadsRes = await fetch(`/api/threads?user_id=${userId}`);
+          if (threadsRes.ok) {
+            const threadsData = await threadsRes.json();
+            setThreads(threadsData.threads || []);
+          }
+        }
+
+        // Reload messages to show the new ones (this will replace temp messages)
+        if (data.thread_id) {
+          const messagesRes = await fetch(`/api/threads/${data.thread_id}`);
+          if (messagesRes.ok) {
+            const messagesData = await messagesRes.json();
+            setMessages(messagesData.messages || []);
+          }
         }
       }
     } catch (e: any) {
@@ -210,6 +341,31 @@ function App() {
     }
   };
 
+  const handleClearHistory = async () => {
+    if (!userId) return;
+    
+    if (!confirm('Are you sure you want to clear all conversation history? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const r = await fetch('/api/threads/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      
+      if (!r.ok) throw new Error('Failed to clear history');
+      
+      setThreads([]);
+      setCurrentThreadId(null);
+      setMessages([]);
+    } catch (e) {
+      console.error('Failed to clear history:', e);
+      setError('Failed to clear history');
+    }
+  };
+
   if (loadingThreads || !userId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -222,13 +378,16 @@ function App() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <AppSidebar
-        threads={threads}
-        currentThreadId={currentThreadId}
-        onSelectThread={handleSelectThread}
-        onNewThread={handleNewThread}
-        onDeleteThread={handleDeleteThread}
-      />
+        <AppSidebar
+          threads={threads}
+          currentThreadId={currentThreadId}
+          onSelectThread={handleSelectThread}
+          onNewThread={handleNewThread}
+          onDeleteThread={handleDeleteThread}
+          onClearHistory={handleClearHistory}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+        />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 bg-background z-10">
           <SidebarTrigger className="-ml-1" />
@@ -273,6 +432,8 @@ function App() {
                 disabled={loading}
                 isCompact={isCompact}
                 onCompactToggle={() => setIsCompact(!isCompact)}
+                streaming={streaming}
+                onStreamingToggle={() => setStreaming(!streaming)}
               />
               <p className="text-xs text-muted-foreground text-center mt-2">
                 Answers may be imperfect. Check sources.

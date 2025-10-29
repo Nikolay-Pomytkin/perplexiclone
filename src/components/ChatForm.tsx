@@ -6,13 +6,15 @@ import { Send, Loader2, ChevronDown, Expand, Minimize } from "lucide-react";
 import { MODELS, DEFAULT_MODEL, type ModelId } from "@/lib/models";
 
 interface ChatFormProps {
-  onSubmit: (query: string, model: ModelId) => void;
+  onSubmit: (query: string, model: ModelId, stream: boolean) => void;
   disabled?: boolean;
   isCompact?: boolean;
   onCompactToggle?: () => void;
+  streaming?: boolean;
+  onStreamingToggle?: () => void;
 }
 
-export default function ChatForm({ onSubmit, disabled = false, isCompact = false, onCompactToggle }: ChatFormProps) {
+export default function ChatForm({ onSubmit, disabled = false, isCompact = false, onCompactToggle, streaming = true, onStreamingToggle }: ChatFormProps) {
   const [q, setQ] = useState("");
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
   const [showModels, setShowModels] = useState(false);
@@ -44,7 +46,7 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
         if (q.trim().length < 3 || disabled) return;
         const query = q.trim();
         setQ("");
-        onSubmit(query, selectedModel);
+        onSubmit(query, selectedModel, streaming);
       }}
       className="flex flex-col gap-2 w-full"
     >
@@ -144,6 +146,24 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
           )}
         </Button>
       </div>
+      {onStreamingToggle && (
+        <div className="flex items-center gap-2 px-1">
+          <input
+            type="checkbox"
+            id="streaming-toggle"
+            checked={streaming}
+            onChange={onStreamingToggle}
+            disabled={disabled}
+            className="h-3.5 w-3.5 cursor-pointer disabled:cursor-not-allowed"
+          />
+          <label
+            htmlFor="streaming-toggle"
+            className="text-xs text-muted-foreground cursor-pointer select-none"
+          >
+            Stream responses
+          </label>
+        </div>
+      )}
     </form>
   );
 }

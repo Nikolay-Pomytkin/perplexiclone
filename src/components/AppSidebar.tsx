@@ -1,9 +1,10 @@
 "use client";
-import { Plus, MessageSquare, Trash2 } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -20,6 +21,9 @@ interface AppSidebarProps {
   onSelectThread: (threadId: string) => void;
   onNewThread: () => void;
   onDeleteThread: (threadId: string) => void;
+  onClearHistory: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
 export function AppSidebar({
@@ -28,18 +32,36 @@ export function AppSidebar({
   onSelectThread,
   onNewThread,
   onDeleteThread,
+  onClearHistory,
+  theme,
+  onToggleTheme,
 }: AppSidebarProps) {
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader className="shrink-0">
-        <div className="flex items-center gap-2 px-2">
-          <div className="flex h-8 w-8 items-center justify-center bg-black text-white">
-            <MessageSquare className="h-4 w-4" />
+        <div className="flex items-center justify-between gap-2 px-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center bg-black dark:bg-white text-white dark:text-black">
+              <MessageSquare className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+              <span className="text-sm font-semibold">Perplexiclone</span>
+              <span className="text-xs text-muted-foreground">Chat</span>
+            </div>
           </div>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold">Perplexiclone</span>
-            <span className="text-xs text-muted-foreground">Chat</span>
-          </div>
+          <Button
+            onClick={onToggleTheme}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </SidebarHeader>
       
@@ -93,6 +115,20 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter className="shrink-0 p-2 border-t">
+        <Button
+          onClick={onClearHistory}
+          variant="outline"
+          disabled={threads.length === 0}
+          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 text-destructive hover:bg-destructive/10 hover:text-destructive border-border"
+          size="sm"
+        >
+          <Trash2 className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
+          <span className="group-data-[collapsible=icon]:hidden">Clear History</span>
+        </Button>
+      </SidebarFooter>
+      
       <SidebarRail />
     </Sidebar>
   );

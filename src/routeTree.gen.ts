@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiThreadsRouteImport } from './routes/api.threads'
 import { Route as ApiAskRouteImport } from './routes/api.ask'
+import { Route as ApiThreadsClearRouteImport } from './routes/api.threads.clear'
 import { Route as ApiThreadsIdRouteImport } from './routes/api.threads.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ApiAskRoute = ApiAskRouteImport.update({
   path: '/api/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiThreadsClearRoute = ApiThreadsClearRouteImport.update({
+  id: '/clear',
+  path: '/clear',
+  getParentRoute: () => ApiThreadsRoute,
+} as any)
 const ApiThreadsIdRoute = ApiThreadsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/api/ask': typeof ApiAskRoute
   '/api/threads': typeof ApiThreadsRouteWithChildren
   '/api/threads/$id': typeof ApiThreadsIdRoute
+  '/api/threads/clear': typeof ApiThreadsClearRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/ask': typeof ApiAskRoute
   '/api/threads': typeof ApiThreadsRouteWithChildren
   '/api/threads/$id': typeof ApiThreadsIdRoute
+  '/api/threads/clear': typeof ApiThreadsClearRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,30 @@ export interface FileRoutesById {
   '/api/ask': typeof ApiAskRoute
   '/api/threads': typeof ApiThreadsRouteWithChildren
   '/api/threads/$id': typeof ApiThreadsIdRoute
+  '/api/threads/clear': typeof ApiThreadsClearRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/ask' | '/api/threads' | '/api/threads/$id'
+  fullPaths:
+    | '/'
+    | '/api/ask'
+    | '/api/threads'
+    | '/api/threads/$id'
+    | '/api/threads/clear'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/ask' | '/api/threads' | '/api/threads/$id'
-  id: '__root__' | '/' | '/api/ask' | '/api/threads' | '/api/threads/$id'
+  to:
+    | '/'
+    | '/api/ask'
+    | '/api/threads'
+    | '/api/threads/$id'
+    | '/api/threads/clear'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/ask'
+    | '/api/threads'
+    | '/api/threads/$id'
+    | '/api/threads/clear'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -91,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAskRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/threads/clear': {
+      id: '/api/threads/clear'
+      path: '/clear'
+      fullPath: '/api/threads/clear'
+      preLoaderRoute: typeof ApiThreadsClearRouteImport
+      parentRoute: typeof ApiThreadsRoute
+    }
     '/api/threads/$id': {
       id: '/api/threads/$id'
       path: '/$id'
@@ -103,10 +135,12 @@ declare module '@tanstack/react-router' {
 
 interface ApiThreadsRouteChildren {
   ApiThreadsIdRoute: typeof ApiThreadsIdRoute
+  ApiThreadsClearRoute: typeof ApiThreadsClearRoute
 }
 
 const ApiThreadsRouteChildren: ApiThreadsRouteChildren = {
   ApiThreadsIdRoute: ApiThreadsIdRoute,
+  ApiThreadsClearRoute: ApiThreadsClearRoute,
 }
 
 const ApiThreadsRouteWithChildren = ApiThreadsRoute._addFileChildren(
