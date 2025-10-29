@@ -15,7 +15,7 @@ export default function SourceCard({ source, index }: SourceCardProps) {
       href={source.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex-shrink-0 w-40 border border-border bg-card hover:bg-accent transition-colors p-3 flex flex-col gap-1.5"
+      className="group shrink-0 w-40 border border-border bg-card hover:bg-accent transition-colors p-3 flex flex-col gap-1.5"
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-xs font-mono text-muted-foreground shrink-0">[{index + 1}]</span>
