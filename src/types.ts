@@ -5,6 +5,13 @@ export type SearchResult = {
   score?: number;
 };
 
+export type ImageResult = {
+  url: string;
+  title?: string;
+  source?: string;
+  thumbnail?: string;
+};
+
 export type ScrapedDoc = {
   id: number; // 1-based index for citation labels
   title: string;

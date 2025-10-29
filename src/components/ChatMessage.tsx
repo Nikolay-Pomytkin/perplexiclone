@@ -12,6 +12,14 @@ export default function ChatMessage({ message, isLoading }: { message: Message; 
   const date = new Date(message.created_at * 1000);
   const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const [activeTab, setActiveTab] = useState<'answer' | 'sources' | 'images'>('answer');
+  const [highlightedSource, setHighlightedSource] = useState<number | null>(null);
+
+  const handleCitationClick = (citationNumber: number) => {
+    setActiveTab('sources');
+    setHighlightedSource(citationNumber);
+    // Remove highlight after animation
+    setTimeout(() => setHighlightedSource(null), 2000);
+  };
 
   if (isUser) {
     return (
@@ -86,10 +94,12 @@ export default function ChatMessage({ message, isLoading }: { message: Message; 
               )}
 
               {/* Tab content */}
-              {activeTab === 'answer' && <Answer markdown={message.content} />}
+              {activeTab === 'answer' && (
+                <Answer markdown={message.content} onCitationClick={handleCitationClick} />
+              )}
               {activeTab === 'sources' && hasSources && (
                 <div className="py-2">
-                  <Sources items={message.sources} />
+                  <Sources items={message.sources} highlightedIndex={highlightedSource} />
                 </div>
               )}
               {activeTab === 'images' && (
