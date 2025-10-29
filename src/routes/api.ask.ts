@@ -8,6 +8,8 @@ import { scrapeMany } from "@/lib/scrape";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { getDb } from "@/lib/db";
 import { getOrCreateUserInDb } from "@/lib/user";
+import { threads, messages } from "@/lib/schema";
+import { eq, desc } from 'drizzle-orm';
 import type { AskResponse, ScrapedDoc } from "@/types";
 
 const BodySchema = z.object({ 
@@ -28,7 +30,7 @@ export const Route = createFileRoute('/api/ask')({
           const db = getDb();
 
           // Ensure user exists
-          getOrCreateUserInDb(user_id);
+          await getOrCreateUserInDb(user_id);
 
           // Get or create thread
           let currentThreadId = thread_id;
@@ -36,17 +38,29 @@ export const Route = createFileRoute('/api/ask')({
             // Create new thread with title from first question
             currentThreadId = uuidv4();
             const title = query.length > 50 ? query.substring(0, 50) + '...' : query;
-            const insertThread = db.prepare('INSERT INTO threads (id, user_id, title, created_at, updated_at) VALUES (?, ?, ?, strftime("%s", "now"), strftime("%s", "now"))');
-            insertThread.run(currentThreadId, user_id, title);
+            await db.insert(threads).values({
+              id: currentThreadId,
+              userId: user_id,
+              title,
+            });
           } else {
             // Update thread's updated_at
-            const updateThread = db.prepare('UPDATE threads SET updated_at = strftime("%s", "now") WHERE id = ?');
-            updateThread.run(currentThreadId);
+            await db.update(threads)
+              .set({ updatedAt: Math.floor(Date.now() / 1000) })
+              .where(eq(threads.id, currentThreadId));
           }
 
           // Fetch previous messages for context (limit to last 10 messages to avoid context overflow)
-          const getMessages = db.prepare('SELECT role, content FROM messages WHERE thread_id = ? ORDER BY created_at DESC LIMIT 10');
-          const prevMessages = (getMessages.all(currentThreadId) as { role: string; content: string }[]).reverse();
+          const prevMessages = await db.select({
+            role: messages.role,
+            content: messages.content,
+          })
+            .from(messages)
+            .where(eq(messages.threadId, currentThreadId))
+            .orderBy(desc(messages.createdAt))
+            .limit(10);
+          
+          const reversedMessages = prevMessages.reverse();
 
           // 1) Search
           const results = await webSearch(query, 5);
@@ -58,7 +72,7 @@ export const Route = createFileRoute('/api/ask')({
           const docs: ScrapedDoc[] = docsRaw.map((d, i) => ({ id: i + 1, ...d }));
 
           // 3) Build prompts
-          constйтесь system = buildSystemPrompt();
+          const system = buildSystemPrompt();
           const user = buildUserPrompt(query, docs);
 
           // 4) Build conversation history
@@ -67,7 +81,7 @@ export const Route = createFileRoute('/api/ask')({
           ];
 
           // Add previous messages (they already have user/assistant roles)
-          for (const msg of prevMessages) {
+          for (const msg of reversedMessages) {
             messages.push({
               role: msg.role as 'user' | 'assistant',
               content: msg.content,
@@ -88,11 +102,22 @@ export const Route = createFileRoute('/api/ask')({
 
           // 6) Save messages to DB
           const messageId = uuidv4();
-          const insertUserMsg = db.prepare('INSERT INTO messages (id, thread_id, role, content, sources, created_at) VALUES (?, ?, ?, ?, ?, strftime("%s", "now"))');
-          const insertAssistantMsg = db.prepare('INSERT INTO messages (id, thread_id, role, content, sources, created_at) VALUES (?, ?, ?, ?, ?, strftime("%s", "now"))');
-
-          insertUserMsg.run(uuidv4(), currentThreadId, 'user', query, null);
-          insertAssistantMsg.run(messageId, currentThreadId, 'assistant', answer_md, JSON.stringify(results));
+          await db.insert(messages).values([
+            {
+              id: uuidv4(),
+              threadId: currentThreadId,
+              role: 'user',
+              content: query,
+              sources: null,
+            },
+            {
+              id: messageId,
+              threadId: currentThreadId,
+              role: 'assistant',
+              content: answer_md,
+              sources: JSON.stringify(results),
+            },
+          ]);
 
           const payload: AskResponse = {
             answer_md,

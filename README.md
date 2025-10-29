@@ -1,4 +1,4 @@
-# Hanover Perplexity Clone — TanStack Start + TypeScript
+# Perplexity Clone — TanStack Start + TypeScript
 
 A minimal Perplexity‑style app: ask a question → perform web search → scrape top pages → synthesize an AI answer with inline numeric citations → render sources list. Built with **TanStack Start + TypeScript + OpenAI SDK** and SerpAPI for web search.
 
@@ -122,6 +122,8 @@ POST /api/ask
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | Your OpenAI API key (starts with `sk-`) |
 | `SERPAPI_API_KEY` | Yes | Your SerpAPI key for web search |
+| `DATABASE_PATH` | No | Path for SQLite database storage (defaults to `./data`, set to `/data` for Railway volumes) |
+| `PORT` | No | Server port (defaults to 3000, Railway sets this automatically) |
 
 ---
 
@@ -189,6 +191,87 @@ npm run check        # Format + lint fix
 
 ---
 
+## Railway Deployment
+
+This project is configured for deployment on Railway using Railpack with serverless capabilities.
+
+### Configuration Files
+
+- **`railpack.json`** - Railpack build configuration for Railway
+- **`railway.json`** - Railway service configuration
+- **`Procfile`** - Process definition for Railway
+- **`server.js`** - Node.js server wrapper for TanStack Start
+
+### Deployment Steps
+
+1. **Connect to Railway**:
+   - Push your code to GitHub/GitLab
+   - Create a new project in Railway
+   - Connect your repository
+
+2. **Configure Environment Variables**:
+   Add these in Railway dashboard:
+   - `OPENAI_API_KEY` - Your OpenAI API key
+   - `SERPAPI_API_KEY` - Your SerpAPI key
+   - `DATABASE_PATH=/data` - Path for SQLite database (matches volume mount)
+
+3. **Set Resource Limits**:
+   - Go to service settings in Railway dashboard
+   - Set CPU limit to **0.5 vCPU**
+   - Set Memory limit to **1GB**
+   - **Note**: You'll need Hobby plan or higher for 1GB memory (Free/Trial plans max at 0.5GB)
+
+4. **Enable Serverless**:
+   - In service settings, enable "Serverless" mode
+   - This allows the service to scale down to zero when inactive
+
+5. **Attach Volume for SQLite**:
+   - Go to service settings → Volumes
+   - Create a new volume
+   - Mount path: `/data`
+   - Volume size depends on your plan:
+     - Free/Trial: 0.5GB
+     - Hobby: 5GB
+     - Pro/Team: 50GB
+
+6. **Deploy**:
+   - Railway will automatically detect `railpack.json` and build using Railpack
+   - The build process runs: `npm ci` → `npm run build`
+   - The service starts with: `npm start` (compute server.js)
+
+### Database Configuration
+
+The SQLite database is automatically configured to use the `DATABASE_PATH` environment variable:
+- **Local development**: Uses `./data/perplexity.db` (default)
+- **Railway**: Uses `/data/perplexity.db` (mounted volume)
+
+The database directory is created automatically if it doesn't exist.
+
+### Build Process
+
+Railpack handles the build using these steps:
+1. **Install**: `npm ci` - Clean install of dependencies
+2. **Build**: `npm run build` - Builds the TanStack Start application
+3. **Start**: `npm start` - Runs `node server.js` which wraps the TanStack Start server for Node.js
+
+### Troubleshooting Deployment
+
+**Build fails**:
+- Check that all dependencies are in `package.json`
+- Ensure Node.js version is 18+ (Railway auto-detects)
+
+**Database errors**:
+- Verify volume is mounted at `/data`
+- Check `DATABASE_PATH` environment variable is set to `/data`
+- Ensure volume has write permissions
+
+**Server not responding**:
+- Check logs in Railway dashboard
+- Verify `PORT` environment variable is set (Railway sets this automatically)
+- Ensure server.js is present in project root
+
+---
+
 ## License
 
 MIT
@@ -202,11 +285,3 @@ Record a 20-120 second demo showing:
 2. Inline citations `[1]`, `[2]` appearing in the answer
 3. The Sources list at the bottom
 4. (Optional) Clicking on a source link
-
----
-
-## Contact
-
-For questions or issues, reach out to:
-- **nick@hanoverpark.com**
-- **chris@hanoverpark.com**

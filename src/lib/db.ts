@@ -1,32 +1,50 @@
 import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { mkdirSync } from 'fs';
+import * as schema from './schema';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Get the project root directory (go up from src/lib to project root)
-const projectRoot = join(__dirname, '../../');
-const dbPath = join(projectRoot, 'data', 'perplexity.db');
+// Use DATABASE_PATH environment variable for Railway volume mounts (e.g., /data)
+// Falls back to project root/data for local development
+const dbDir = process.env.DATABASE_PATH || join(__dirname, '../../data');
+const dbPath = join(dbDir, 'perplexity.db');
 
-let dbInstance: Database.Database | null = null;
+// Ensure directory exists
+try {
+  mkdirSync(dbDir, { recursive: true });
+} catch (error) {
+  // Directory might already exist, ignore error
+}
 
-export function getDb(): Database.Database {
+let sqliteDb: Database.Database | null = null;
+let dbInstance: ReturnType<typeof drizzle> | null = null;
+
+export function getDb() {
   if (dbInstance) {
     return dbInstance;
   }
 
-  dbInstance = new Database(dbPath);
-  dbInstance.pragma('journal_mode = WAL');
+  sqliteDb = new Database(dbPath);
+  sqliteDb.pragma('journal_mode = WAL');
   
-  initDb(dbInstance);
+  dbInstance = drizzle(sqliteDb, { schema });
+  
+  // Initialize database tables
+  initDb();
+  
   return dbInstance;
 }
 
-function initDb(db: Database.Database) {
+function initDb() {
+  if (!sqliteDb) return;
+  
   // Create users table
-  db.exec(`
+  sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
@@ -34,7 +52,7 @@ function initDb(db: Database.Database) {
   `);
 
   // Create threads table
-  db.exec(`
+  sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS threads (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -46,7 +64,7 @@ function initDb(db: Database.Database) {
   `);
 
   // Create messages table
-  db.exec(`
+  sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id TEXT PRIMARY KEY,
       thread_id TEXT NOT NULL,
@@ -59,11 +77,10 @@ function initDb(db: Database.Database) {
   `);
 
   // Create indexes for better query performance
-  db.exec(`
+  sqliteDb.exec(`
     CREATE INDEX IF NOT EXISTS idx_threads_user_id ON threads(user_id);
     CREATE INDEX IF NOT EXISTS idx_threads_updated_at ON threads(updated_at DESC);
     CREATE INDEX IF NOT EXISTS idx_messages_thread_id ON messages(thread_id);
     CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
   `);
 }
-

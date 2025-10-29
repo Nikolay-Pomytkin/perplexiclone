@@ -140,13 +140,3 @@ src/
 │   └── prompt.ts           # LLM prompts
 └── types.ts                # TypeScript types
 ```
-
----
-
-## Support
-
-For issues or questions:
-- Check README.md for detailed documentation
-- Review the code comments
-- Contact: nick@hanoverpark.com, chris@hanoverpark.com
-

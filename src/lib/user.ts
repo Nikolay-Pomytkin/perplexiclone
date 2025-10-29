@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from './db';
+import { users } from './schema';
+import { eq } from 'drizzle-orm';
 
 export function getOrCreateUserId(): string {
   // In server context, we'll get user_id from request headers/cookies
@@ -7,14 +9,13 @@ export function getOrCreateUserId(): string {
   throw new Error('getOrCreateUserId should be called with user_id from client');
 }
 
-export function getOrCreateUserInDb(userId: string): string {
+export async function getOrCreateUserInDb(userId: string): Promise<string> {
   const db = getDb();
-  const stmt = db.prepare('SELECT id FROM users WHERE id = ?');
-  const existing = stmt.get(userId) as { id: string } | undefined;
+  
+  const existing = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
 
-  if (!existing) {
-    const insert = db.prepare('INSERT INTO users (id, created_at) VALUES (?, strftime("%s", "now"))');
-    insert.run(userId);
+  if (existing.length === 0) {
+    await db.insert(users).values({ id: userId });
   }
 
   return userId;
