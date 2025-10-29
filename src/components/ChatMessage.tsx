@@ -25,7 +25,7 @@ export default function ChatMessage({ message, isLoading, isCompact }: { message
   if (isUser) {
     return (
       <div className={`flex justify-end ${isCompact ? 'mb-3' : 'mb-6'}`}>
-        <div className={`max-w-[85%] md:max-w-[70%] bg-black text-white border border-black wrap-break-word ${
+        <div className={`max-w-[85%] md:max-w-[70%] bg-primary text-primary-foreground border border-primary wrap-break-word ${
           isCompact ? 'px-3 py-2' : 'px-4 py-3'
         }`}>
           <p className={`${isCompact ? 'text-xs' : 'text-sm'} leading-relaxed`}>{message.content}</p>
@@ -88,7 +88,7 @@ export default function ChatMessage({ message, isLoading, isCompact }: { message
                     onClick={() => setActiveTab('answer')}
                     className={`flex items-center gap-1.5 ${isCompact ? 'px-2 py-1.5' : 'px-3 py-2'} text-xs font-medium border-b-2 transition-colors ${
                       activeTab === 'answer'
-                        ? 'border-black text-foreground'
+                        ? 'border-primary text-foreground'
                         : 'border-transparent text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -100,7 +100,7 @@ export default function ChatMessage({ message, isLoading, isCompact }: { message
                       onClick={() => setActiveTab('sources')}
                       className={`flex items-center gap-1.5 ${isCompact ? 'px-2 py-1.5' : 'px-3 py-2'} text-xs font-medium border-b-2 transition-colors ${
                         activeTab === 'sources'
-                          ? 'border-black text-foreground'
+                          ? 'border-primary text-foreground'
                           : 'border-transparent text-muted-foreground hover:text-foreground'
                       }`}
                     >
@@ -114,7 +114,7 @@ export default function ChatMessage({ message, isLoading, isCompact }: { message
                       onClick={() => setActiveTab('images')}
                       className={`flex items-center gap-1.5 ${isCompact ? 'px-2 py-1.5' : 'px-3 py-2'} text-xs font-medium border-b-2 transition-colors ${
                         activeTab === 'images'
-                          ? 'border-black text-foreground'
+                          ? 'border-primary text-foreground'
                           : 'border-transparent text-muted-foreground hover:text-foreground'
                       }`}
                     >

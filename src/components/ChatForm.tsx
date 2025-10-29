@@ -100,12 +100,12 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
           <div className="flex shrink-0 border border-input h-11">
             <button
               type="button"
-              onClick={() => !isCompact && onCompactToggle()}
-              disabled={disabled || !isCompact}
+              onClick={onCompactToggle}
+              disabled={disabled}
               className={`px-3 flex items-center justify-center transition-colors ${
                 !isCompact 
-                  ? 'bg-black text-white cursor-default' 
-                  : 'bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background hover:bg-accent'
               }`}
               title="Full view"
             >
@@ -114,12 +114,12 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
             <div className="w-px bg-border" />
             <button
               type="button"
-              onClick={() => isCompact && onCompactToggle()}
-              disabled={disabled || isCompact}
+              onClick={onCompactToggle}
+              disabled={disabled}
               className={`px-3 flex items-center justify-center transition-colors ${
                 isCompact 
-                  ? 'bg-black text-white cursor-default' 
-                  : 'bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background hover:bg-accent'
               }`}
               title="Compact view"
             >
