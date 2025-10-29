@@ -49,16 +49,34 @@ export default function ChatMessage({ message, isLoading, isCompact }: { message
             </div>
           ) : (
             <>
-              {/* Horizontal cards at top - sources and images */}
-              {(hasSources || hasImages) && (
-                <div className={`${isCompact ? 'mb-2' : 'mb-4'} -mx-2 overflow-x-auto scrollbar-thin`}>
-                  <div className={`flex gap-2 px-2 ${isCompact ? 'pb-1' : 'pb-2'}`}>
-                    {message.sources?.map((source, idx) => (
-                      <SourceCard key={source.url} source={source} index={idx} compact={isCompact} />
-                    ))}
-                    {message.images?.map((image, idx) => (
-                      <ImageCard key={`${image.url}-${idx}`} image={image} compact={isCompact} />
-                    ))}
+              {/* Images section */}
+              {hasImages && (
+                <div className={isCompact ? 'mb-2' : 'mb-4'}>
+                  <h4 className={`font-bold uppercase tracking-wider text-muted-foreground ${isCompact ? 'text-[10px] mb-1 px-2' : 'text-xs mb-2 px-2'}`}>
+                    Images
+                  </h4>
+                  <div className="-mx-2 overflow-x-auto scrollbar-thin">
+                    <div className={`flex gap-2 px-2 ${isCompact ? 'pb-1' : 'pb-2'}`}>
+                      {message.images.map((image, idx) => (
+                        <ImageCard key={`${image.url}-${idx}`} image={image} compact={isCompact} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sources section */}
+              {hasSources && (
+                <div className={isCompact ? 'mb-2' : 'mb-4'}>
+                  <h4 className={`font-bold uppercase tracking-wider text-muted-foreground ${isCompact ? 'text-[10px] mb-1 px-2' : 'text-xs mb-2 px-2'}`}>
+                    Sources
+                  </h4>
+                  <div className="-mx-2 overflow-x-auto scrollbar-thin">
+                    <div className={`flex gap-2 px-2 ${isCompact ? 'pb-1' : 'pb-2'}`}>
+                      {message.sources.map((source, idx) => (
+                        <SourceCard key={source.url} source={source} index={idx} compact={isCompact} />
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

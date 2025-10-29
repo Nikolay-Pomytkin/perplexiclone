@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, ChevronDown, LayoutGrid, List } from "lucide-react";
+import { Send, Loader2, ChevronDown, Expand, Minimize } from "lucide-react";
 import { MODELS, DEFAULT_MODEL, type ModelId } from "@/lib/models";
 
 interface ChatFormProps {
@@ -107,7 +107,7 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
               }`}
               title="Full view"
             >
-              <LayoutGrid className="h-4 w-4" />
+              <Expand className="h-4 w-4" />
             </button>
             <div className="w-px bg-border" />
             <button
@@ -121,7 +121,7 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
               }`}
               title="Compact view"
             >
-              <List className="h-4 w-4" />
+              <Minimize className="h-4 w-4" />
             </button>
           </div>
         )}
