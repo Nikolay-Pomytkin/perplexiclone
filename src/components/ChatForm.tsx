@@ -147,20 +147,18 @@ export default function ChatForm({ onSubmit, disabled = false, isCompact = false
         </Button>
       </div>
       {onStreamingToggle && (
-        <div className="flex items-center gap-2 px-1">
-          <input
-            type="checkbox"
-            id="streaming-toggle"
-            checked={streaming}
-            onChange={onStreamingToggle}
-            disabled={disabled}
-            className="h-3.5 w-3.5 cursor-pointer disabled:cursor-not-allowed"
-          />
-          <label
-            htmlFor="streaming-toggle"
-            className="text-xs text-muted-foreground cursor-pointer select-none"
-          >
-            Stream responses
+        <div className="flex items-center gap-2 px-1 py-1">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={streaming}
+              onChange={onStreamingToggle}
+              disabled={disabled}
+              className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed accent-black"
+            />
+            <span className="text-xs text-muted-foreground">
+              Stream responses {streaming ? '(on)' : '(off)'}
+            </span>
           </label>
         </div>
       )}

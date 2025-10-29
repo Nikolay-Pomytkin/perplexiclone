@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { AskResponse, Thread, Message } from "@/types";
 
 const USER_ID_KEY = 'perplexity_user_id';
+const STREAMING_KEY = 'perplexity_streaming';
 
 export const Route = createFileRoute('/')({ component: App });
 
@@ -46,6 +47,14 @@ function App() {
     const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light');
     setTheme(initialTheme);
     document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+  }, []);
+
+  // Initialize streaming preference
+  useEffect(() => {
+    const storedStreaming = localStorage.getItem(STREAMING_KEY);
+    if (storedStreaming !== null) {
+      setStreaming(storedStreaming === 'true');
+    }
   }, []);
 
   const handleToggleTheme = () => {
@@ -132,7 +141,7 @@ function App() {
             user_id: userId,
             thread_id: currentThreadId || undefined,
             model,
-            stream: true,
+            stream: true, // Always true in this branch since useStreaming was checked
           })
         });
         
@@ -433,7 +442,11 @@ function App() {
                 isCompact={isCompact}
                 onCompactToggle={() => setIsCompact(!isCompact)}
                 streaming={streaming}
-                onStreamingToggle={() => setStreaming(!streaming)}
+                onStreamingToggle={() => {
+                  const newStreaming = !streaming;
+                  setStreaming(newStreaming);
+                  localStorage.setItem(STREAMING_KEY, String(newStreaming));
+                }}
               />
               <p className="text-xs text-muted-foreground text-center mt-2">
                 Answers may be imperfect. Check sources.
