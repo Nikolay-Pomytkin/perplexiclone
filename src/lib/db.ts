@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { mkdirSync } from 'fs';
+import { mkdirSync, existsSync } from 'fs';
 import * as schema from './schema';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,8 +17,11 @@ const dbPath = join(dbDir, 'perplexity.db');
 // Ensure directory exists
 try {
   mkdirSync(dbDir, { recursive: true });
+  console.log('Database directory:', dbDir);
+  console.log('Database path:', dbPath);
+  console.log('Directory exists:', existsSync(dbDir));
 } catch (error) {
-  // Directory might already exist, ignore error
+  console.error('Error creating database directory:', error);
 }
 
 let libsqlClient: ReturnType<typeof createClient> | null = null;
@@ -31,6 +34,7 @@ export function getDb() {
   }
 
   // Create LibSQL client for local SQLite file
+  console.log('Initializing SQLite database at:', dbPath);
   libsqlClient = createClient({
     url: `file:${dbPath}`,
   });
