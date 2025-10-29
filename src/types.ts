@@ -22,6 +22,7 @@ export type ScrapedDoc = {
 export type AskResponse = {
   answer_md: string; // markdown with inline [n] citations
   sources: SearchResult[]; // shown in Sources list
+  images?: ImageResult[]; // image search results
   thread_id?: string;
   message_id?: string;
 };
@@ -32,6 +33,7 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   sources?: SearchResult[];
+  images?: ImageResult[];
   model?: string;
   created_at: number;
 };

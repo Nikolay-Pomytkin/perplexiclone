@@ -25,6 +25,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingThreads, setLoadingThreads] = useState(true);
+  const [isCompact, setIsCompact] = useState(false);
 
   // Initialize user ID
   useEffect(() => {
@@ -262,12 +263,17 @@ function App() {
               </div>
             )}
 
-            <ChatHistory messages={messages} loading={loading} />
+            <ChatHistory messages={messages} loading={loading} isCompact={isCompact} />
           </div>
 
           <div className="shrink-0 border-t bg-background p-4 md:p-6">
             <div className="mx-auto max-w-3xl">
-              <ChatForm onSubmit={handleSendMessage} disabled={loading} />
+              <ChatForm 
+                onSubmit={handleSendMessage} 
+                disabled={loading}
+                isCompact={isCompact}
+                onCompactToggle={() => setIsCompact(!isCompact)}
+              />
               <p className="text-xs text-muted-foreground text-center mt-2">
                 Answers may be imperfect. Check sources.
               </p>

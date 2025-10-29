@@ -6,9 +6,10 @@ import { Components } from "react-markdown";
 interface AnswerProps {
   markdown: string;
   onCitationClick?: (citationNumber: number) => void;
+  isCompact?: boolean;
 }
 
-export default function Answer({ markdown, onCitationClick }: AnswerProps) {
+export default function Answer({ markdown, onCitationClick, isCompact }: AnswerProps) {
   if (!markdown) return null;
 
   // Custom component to handle citation links [1], [2], etc.
@@ -47,8 +48,12 @@ export default function Answer({ markdown, onCitationClick }: AnswerProps) {
     },
   };
 
+  const proseClasses = isCompact
+    ? "prose-sm prose-neutral dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-code:text-primary prose-headings:mb-1 prose-p:my-1 prose-li:my-0.5 wrap-break-word overflow-wrap-anywhere"
+    : "prose prose-neutral dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-code:text-primary wrap-break-word overflow-wrap-anywhere";
+
   return (
-    <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-code:text-primary wrap-break-word overflow-wrap-anywhere">
+    <div className={proseClasses}>
       <ReactMarkdown components={components}>{markdown}</ReactMarkdown>
     </div>
   );

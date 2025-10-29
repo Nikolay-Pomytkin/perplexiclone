@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import ChatMessage from "@/components/ChatMessage";
 import type { Message } from "@/types";
 
-export default function ChatHistory({ messages, loading }: { messages: Message[]; loading?: boolean }) {
+export default function ChatHistory({ messages, loading, isCompact }: { messages: Message[]; loading?: boolean; isCompact?: boolean }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,7 +17,12 @@ export default function ChatHistory({ messages, loading }: { messages: Message[]
   return (
     <div className="space-y-4">
       {messages.map((message) => (
-        <ChatMessage key={message.id} message={message} isLoading={loading && message.id.startsWith('temp-loading')} />
+        <ChatMessage 
+          key={message.id} 
+          message={message} 
+          isLoading={loading && message.id.startsWith('temp-loading')}
+          isCompact={isCompact}
+        />
       ))}
       <div ref={bottomRef} />
     </div>

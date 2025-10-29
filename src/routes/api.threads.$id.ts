@@ -3,7 +3,7 @@ import { json } from '@tanstack/react-start';
 import { getDb, ensureDbInitialized } from "@/lib/db";
 import { threads, messages } from "@/lib/schema";
 import { eq, asc } from 'drizzle-orm';
-import type { Thread, Message, SearchResult } from "@/types";
+import type { Thread, Message, SearchResult, ImageResult } from "@/types";
 
 export const Route = createFileRoute('/api/threads/$id')({
   server: {
@@ -41,6 +41,7 @@ export const Route = createFileRoute('/api/threads/$id')({
             role: msg.role as 'user' | 'assistant',
             content: msg.content,
             sources: msg.sources ? JSON.parse(msg.sources) as SearchResult[] : undefined,
+            images: msg.images ? JSON.parse(msg.images) as ImageResult[] : undefined,
             model: msg.model || undefined,
             created_at: msg.createdAt,
           }));

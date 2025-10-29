@@ -2,15 +2,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, ChevronDown } from "lucide-react";
+import { Send, Loader2, ChevronDown, LayoutGrid, List } from "lucide-react";
 import { MODELS, DEFAULT_MODEL, type ModelId } from "@/lib/models";
 
 interface ChatFormProps {
   onSubmit: (query: string, model: ModelId) => void;
   disabled?: boolean;
+  isCompact?: boolean;
+  onCompactToggle?: () => void;
 }
 
-export default function ChatForm({ onSubmit, disabled = false }: ChatFormProps) {
+export default function ChatForm({ onSubmit, disabled = false, isCompact = false, onCompactToggle }: ChatFormProps) {
   const [q, setQ] = useState("");
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
   const [showModels, setShowModels] = useState(false);
@@ -92,6 +94,37 @@ export default function ChatForm({ onSubmit, disabled = false }: ChatFormProps) 
           disabled={disabled}
           autoComplete="off"
         />
+        {onCompactToggle && (
+          <div className="flex shrink-0 border border-input h-11">
+            <button
+              type="button"
+              onClick={() => !isCompact && onCompactToggle()}
+              disabled={disabled || !isCompact}
+              className={`px-3 flex items-center justify-center transition-colors ${
+                !isCompact 
+                  ? 'bg-black text-white cursor-default' 
+                  : 'bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
+              title="Full view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <div className="w-px bg-border" />
+            <button
+              type="button"
+              onClick={() => isCompact && onCompactToggle()}
+              disabled={disabled || isCompact}
+              className={`px-3 flex items-center justify-center transition-colors ${
+                isCompact 
+                  ? 'bg-black text-white cursor-default' 
+                  : 'bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
+              title="Compact view"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         <Button 
           type="submit" 
           disabled={disabled || q.trim().length < 3}

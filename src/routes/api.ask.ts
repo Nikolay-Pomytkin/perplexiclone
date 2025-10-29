@@ -3,7 +3,7 @@ import { json } from '@tanstack/react-start';
 import OpenAI from "openai";
 import { z } from "zod";
 import { v4 as uuidv4 } from 'uuid';
-import { webSearch } from "@/lib/search";
+import { webSearch, imageSearch } from "@/lib/search";
 import { scrapeMany } from "@/lib/scrape";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { getDb, ensureDbInitialized } from "@/lib/db";
@@ -64,8 +64,11 @@ export const Route = createFileRoute('/api/ask')({
           
           const reversedMessages = prevMessages.reverse();
 
-          // 1) Search
-          const results = await webSearch(query, 5);
+          // 1) Search - both web and images
+          const [results, imageResults] = await Promise.all([
+            webSearch(query, 5),
+            imageSearch(query, 6),
+          ]);
 
           // 2) Scrape (best-effort)
           const docsRaw = await scrapeMany(results.map(r => r.url));
@@ -112,6 +115,7 @@ export const Route = createFileRoute('/api/ask')({
               role: 'user',
               content: query,
               sources: null,
+              images: null,
               model: null,
             },
             {
@@ -120,6 +124,7 @@ export const Route = createFileRoute('/api/ask')({
               role: 'assistant',
               content: answer_md,
               sources: JSON.stringify(results),
+              images: imageResults.length > 0 ? JSON.stringify(imageResults) : null,
               model: selectedModel,
             },
           ]);
@@ -127,6 +132,7 @@ export const Route = createFileRoute('/api/ask')({
           const payload: AskResponse = {
             answer_md,
             sources: results,
+            images: imageResults,
             thread_id: currentThreadId,
             message_id: messageId,
           };

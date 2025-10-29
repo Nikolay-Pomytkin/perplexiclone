@@ -83,6 +83,7 @@ async function initDb() {
         role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
         content TEXT NOT NULL,
         sources TEXT,
+        images TEXT,
         model TEXT,
         created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
         FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
@@ -98,6 +99,18 @@ async function initDb() {
       // Column might already exist, ignore error
       if (!error?.message?.includes('duplicate column')) {
         console.warn('Could not add model column:', error);
+      }
+    }
+
+    // Migration: Add images column if it doesn't exist
+    try {
+      await libsqlClient.execute(`
+        ALTER TABLE messages ADD COLUMN images TEXT;
+      `);
+    } catch (error: any) {
+      // Column might already exist, ignore error
+      if (!error?.message?.includes('duplicate column')) {
+        console.warn('Could not add images column:', error);
       }
     }
 
