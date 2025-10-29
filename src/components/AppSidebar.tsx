@@ -37,7 +37,7 @@ export function AppSidebar({
             <MessageSquare className="h-4 w-4" />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold">Mini-Perplexity</span>
+            <span className="text-sm font-semibold">Perplexiclone</span>
             <span className="text-xs text-muted-foreground">Chat</span>
           </div>
         </div>

@@ -25,6 +25,7 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   sources?: SearchResult[];
+  model?: string;
   created_at: number;
 };
 

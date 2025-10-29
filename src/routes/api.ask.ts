@@ -16,6 +16,7 @@ const BodySchema = z.object({
   query: z.string().min(3),
   user_id: z.string().uuid(),
   thread_id: z.string().uuid().optional(),
+  model: z.string().optional(),
 });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -26,7 +27,7 @@ export const Route = createFileRoute('/api/ask')({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { query, user_id, thread_id } = BodySchema.parse(body);
+          const { query, user_id, thread_id, model } = BodySchema.parse(body);
           const db = getDb();
           await ensureDbInitialized();
 
@@ -94,7 +95,7 @@ export const Route = createFileRoute('/api/ask')({
 
           // 5) Ask LLM
           const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: model || "gpt-4o-mini",
             messages: conversationHistory,
             temperature: 0.2,
           });
@@ -103,6 +104,7 @@ export const Route = createFileRoute('/api/ask')({
 
           // 6) Save messages to DB
           const messageId = uuidv4();
+          const selectedModel = model || "gpt-4o-mini";
           await db.insert(messages).values([
             {
               id: uuidv4(),
@@ -110,6 +112,7 @@ export const Route = createFileRoute('/api/ask')({
               role: 'user',
               content: query,
               sources: null,
+              model: null,
             },
             {
               id: messageId,
@@ -117,6 +120,7 @@ export const Route = createFileRoute('/api/ask')({
               role: 'assistant',
               content: answer_md,
               sources: JSON.stringify(results),
+              model: selectedModel,
             },
           ]);
 

@@ -39,6 +39,7 @@ export const messages = sqliteTable(
     role: text('role', { enum: ['user', 'assistant'] }).notNull(),
     content: text('content').notNull(),
     sources: text('sources'), // JSON string
+    model: text('model'), // AI model used
     createdAt: integer('created_at')
       .notNull()
       .default(sql`(strftime('%s', 'now'))`),

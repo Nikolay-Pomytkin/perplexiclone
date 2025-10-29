@@ -75,7 +75,7 @@ function App() {
     loadMessages();
   }, [currentThreadId, userId]);
 
-  const handleSendMessage = async (query: string) => {
+  const handleSendMessage = async (query: string, model: string) => {
     if (!userId) return;
 
     setLoading(true);
@@ -109,6 +109,7 @@ function App() {
           query,
           user_id: userId,
           thread_id: currentThreadId || undefined,
+          model,
         })
       });
       
@@ -251,7 +252,7 @@ function App() {
               <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
                 <div className="max-w-md space-y-6 border border-border p-8">
                   <h2 className="text-2xl font-bold tracking-tight">
-                    Welcome to Mini-Perplexity
+                    Welcome to Perplexiclone
                   </h2>
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     Ask me anything and I'll search the web, scrape relevant sources, 

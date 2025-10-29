@@ -41,6 +41,7 @@ export const Route = createFileRoute('/api/threads/$id')({
             role: msg.role as 'user' | 'assistant',
             content: msg.content,
             sources: msg.sources ? JSON.parse(msg.sources) as SearchResult[] : undefined,
+            model: msg.model || undefined,
             created_at: msg.createdAt,
           }));
 

@@ -13,7 +13,7 @@ export default function ChatMessage({ message, isLoading }: { message: Message; 
   if (isUser) {
     return (
       <div className="flex justify-end mb-6">
-        <div className="max-w-[85%] md:max-w-[70%] bg-black text-white px-4 py-3 border border-black">
+        <div className="max-w-[85%] md:max-w-[70%] bg-black text-white px-4 py-3 border border-black wrap-break-word">
           <p className="text-sm leading-relaxed">{message.content}</p>
           <p className="text-xs opacity-70 mt-1.5">{timeStr}</p>
         </div>
@@ -24,11 +24,11 @@ export default function ChatMessage({ message, isLoading }: { message: Message; 
   return (
     <div className="flex justify-start mb-6">
       <Card className="max-w-[85%] md:max-w-[70%] border border-border">
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 wrap-break-word">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">{message.content}</span>
+              <span className="text-sm wrap-break-word">{message.content}</span>
             </div>
           ) : (
             <>
@@ -38,7 +38,15 @@ export default function ChatMessage({ message, isLoading }: { message: Message; 
                   <Sources items={message.sources} />
                 </div>
               )}
-              <p className="text-xs text-muted-foreground mt-3">{timeStr}</p>
+              <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                {message.model && (
+                  <>
+                    <span className="font-mono">{message.model}</span>
+                    <span>•</span>
+                  </>
+                )}
+                <span>{timeStr}</span>
+              </div>
             </>
           )}
         </CardContent>
