@@ -30,15 +30,16 @@ Railway provides persistent volumes that survive deployments and restarts.
 
 3. **Create a volume:**
    ```bash
-   railway volume create perplexity-data
+   railway volume add --mount-path /app/data
    ```
+   
+   This will create a volume and mount it at `/app/data`
 
-4. **The volume is now attached** - Railway will automatically mount it to `/app/data` as specified in `railway.json`
-
-5. **Redeploy:**
+4. **Redeploy:**
    ```bash
    railway up
    # or push to trigger deployment
+   git push origin main
    ```
 
 #### Option 2: Using Railway Dashboard
