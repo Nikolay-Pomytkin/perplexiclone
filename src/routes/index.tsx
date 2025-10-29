@@ -208,8 +208,8 @@ function App() {
                       : m
                   ));
                 } else if (parsed.message_id) {
-                  // This is done event
-                  finalMessageId = parsed.message_id;
+                  // This is done event - we don't need to do anything with the message_id here
+                  // as we'll reload messages from the DB after streaming completes
                 } else if (parsed.error) {
                   // This is an error event
                   throw new Error(parsed.error);

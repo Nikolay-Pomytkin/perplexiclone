@@ -41,19 +41,19 @@ export function AppSidebar({
       <SidebarHeader className="shrink-0">
         <div className="flex items-center justify-between gap-2 px-2">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center bg-black dark:bg-white text-white dark:text-black">
+            <div className="flex h-8 w-8 items-center justify-center bg-sidebar-primary text-sidebar-primary-foreground">
               <MessageSquare className="h-4 w-4" />
             </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-semibold">Perplexiclone</span>
-              <span className="text-xs text-muted-foreground">Chat</span>
+              <span className="text-sm font-semibold text-sidebar-foreground">Perplexiclone</span>
+              <span className="text-xs text-sidebar-foreground/60">Chat</span>
             </div>
           </div>
           <Button
             onClick={onToggleTheme}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0"
+            className="h-8 w-8 shrink-0 hover:bg-sidebar-accent text-sidebar-foreground"
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
@@ -65,10 +65,10 @@ export function AppSidebar({
         </div>
       </SidebarHeader>
       
-      <div className="shrink-0 p-2 border-b">
+      <div className="shrink-0 p-2 border-b border-sidebar-border">
         <Button 
           onClick={onNewThread} 
-          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 bg-black hover:bg-black/90 text-white" 
+          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground" 
           size="sm"
         >
           <Plus className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
@@ -116,12 +116,12 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="shrink-0 p-2 border-t">
+      <SidebarFooter className="shrink-0 p-2 border-t border-sidebar-border">
         <Button
           onClick={onClearHistory}
           variant="outline"
           disabled={threads.length === 0}
-          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 text-destructive hover:bg-destructive/10 hover:text-destructive border-border"
+          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 text-destructive hover:bg-destructive/10 hover:text-destructive border-sidebar-border"
           size="sm"
         >
           <Trash2 className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
