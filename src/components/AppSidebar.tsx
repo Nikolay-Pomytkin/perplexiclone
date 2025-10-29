@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import type { Thread } from "@/types";
 
@@ -29,50 +30,54 @@ export function AppSidebar({
   onDeleteThread,
 }: AppSidebarProps) {
   return (
-    <Sidebar variant="inset">
-      <SidebarHeader>
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader className="shrink-0">
         <div className="flex items-center gap-2 px-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex h-8 w-8 items-center justify-center bg-black text-white">
             <MessageSquare className="h-4 w-4" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold">Mini-Perplexity</span>
             <span className="text-xs text-muted-foreground">Chat</span>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <Button onClick={onNewThread} className="w-full" size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              New Thread
-            </Button>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      
+      <div className="shrink-0 p-2 border-b">
+        <Button 
+          onClick={onNewThread} 
+          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 bg-black hover:bg-black/90 text-white" 
+          size="sm"
+        >
+          <Plus className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
+          <span className="group-data-[collapsible=icon]:hidden">New Thread</span>
+        </Button>
+      </div>
+
+      <SidebarContent className="overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupContent>
             {threads.length === 0 ? (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">
                 No conversations yet
               </div>
             ) : (
               <SidebarMenu>
                 {threads.map((thread) => (
                   <SidebarMenuItem key={thread.id}>
-                    <div className="group relative flex w-full items-center">
+                    <div className="group/item relative flex w-full items-center">
                       <SidebarMenuButton
                         isActive={currentThreadId === thread.id}
                         onClick={() => onSelectThread(thread.id)}
                         className="flex-1"
                       >
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{thread.title}</span>
+                        <MessageSquare className="h-4 w-4 shrink-0" />
+                        <span className="group-data-[collapsible=icon]:hidden truncate">{thread.title}</span>
                       </SidebarMenuButton>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute right-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                        className="absolute right-1 h-6 w-6 opacity-0 transition-opacity group-hover/item:opacity-100 group-data-[collapsible=icon]:hidden"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDeleteThread(thread.id);
@@ -88,6 +93,7 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarRail />
     </Sidebar>
   );
 }

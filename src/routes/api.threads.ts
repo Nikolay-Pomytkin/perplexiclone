@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { json } from '@tanstack/react-start';
 import { z } from "zod";
 import { v4 as uuidv4 } from 'uuid';
-import { getDb } from "@/lib/db";
+import { getDb, ensureDbInitialized } from "@/lib/db";
 import { getOrCreateUserInDb } from "@/lib/user";
 import { threads } from "@/lib/schema";
 import { eq, desc } from 'drizzle-orm';
@@ -26,6 +26,7 @@ export const Route = createFileRoute('/api/threads')({
           }
 
           const db = getDb();
+          await ensureDbInitialized();
           const threadsList = await db.select().from(threads)
             .where(eq(threads.userId, user_id))
             .orderBy(desc(threads.updatedAt));
@@ -50,6 +51,7 @@ export const Route = createFileRoute('/api/threads')({
           const body = await request.json();
           const { user_id, title } = PostBodySchema.parse(body);
           const db = getDb();
+          await ensureDbInitialized();
 
           // Ensure user exists
           await getOrCreateUserInDb(user_id);

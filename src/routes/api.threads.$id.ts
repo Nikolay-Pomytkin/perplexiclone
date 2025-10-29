@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { json } from '@tanstack/react-start';
-import { getDb } from "@/lib/db";
+import { getDb, ensureDbInitialized } from "@/lib/db";
 import { threads, messages } from "@/lib/schema";
 import { eq, asc } from 'drizzle-orm';
 import type { Thread, Message, SearchResult } from "@/types";
@@ -12,6 +12,7 @@ export const Route = createFileRoute('/api/threads/$id')({
         try {
           const { id } = params;
           const db = getDb();
+          await ensureDbInitialized();
 
           // Get thread
           const threadResult = await db.select().from(threads).where(eq(threads.id, id)).limit(1);
@@ -53,6 +54,7 @@ export const Route = createFileRoute('/api/threads/$id')({
         try {
           const { id } = params;
           const db = getDb();
+          await ensureDbInitialized();
 
           // Delete thread (messages will be cascade deleted)
           await db.delete(threads).where(eq(threads.id, id));

@@ -81,6 +81,26 @@ function App() {
     setLoading(true);
     setError(null);
     
+    // Add user message immediately to the UI
+    const tempUserMessage: Message = {
+      id: 'temp-user-' + Date.now(),
+      thread_id: currentThreadId || '',
+      role: 'user',
+      content: query,
+      created_at: Math.floor(Date.now() / 1000),
+    };
+    
+    // Add loading message
+    const tempLoadingMessage: Message = {
+      id: 'temp-loading-' + Date.now(),
+      thread_id: currentThreadId || '',
+      role: 'assistant',
+      content: 'Searching, scraping, and synthesizing...',
+      created_at: Math.floor(Date.now() / 1000),
+    };
+    
+    setMessages(prev => [...prev, tempUserMessage, tempLoadingMessage]);
+    
     try {
       const r = await fetch("/api/ask", {
         method: "POST",
@@ -110,7 +130,7 @@ function App() {
         }
       }
 
-      // Reload messages to show the new ones
+      // Reload messages to show the new ones (this will replace temp messages)
       if (data.thread_id) {
         const messagesRes = await fetch(`/api/threads/${data.thread_id}`);
         if (messagesRes.ok) {
@@ -121,6 +141,8 @@ function App() {
     } catch (e: any) {
       console.error(e);
       setError(e.message || "Failed to fetch answer.");
+      // Remove temp messages on error
+      setMessages(prev => prev.filter(m => !m.id.startsWith('temp-')));
     } finally {
       setLoading(false);
     }
@@ -197,7 +219,7 @@ function App() {
   const currentThread = threads.find(t => t.id === currentThreadId);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar
         threads={threads}
         currentThreadId={currentThreadId}
@@ -206,15 +228,15 @@ function App() {
         onDeleteThread={handleDeleteThread}
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <h1 className="text-lg font-semibold">
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 bg-background z-10">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-1 h-6" />
+          <h1 className="text-base font-semibold tracking-tight">
             {currentThread?.title || 'Mini‑Perplexity'}
           </h1>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin">
             {error && (
               <Card className="border-destructive mb-4">
                 <CardContent className="pt-6">
@@ -225,20 +247,30 @@ function App() {
               </Card>
             )}
 
-            {loading && (
-              <div className="text-sm text-primary animate-pulse text-center py-4">
-                Searching, scraping, and synthesizing...
+            {!currentThreadId && messages.length === 0 && !loading && (
+              <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
+                <div className="max-w-md space-y-6 border border-border p-8">
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    Welcome to Mini-Perplexity
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Ask me anything and I'll search the web, scrape relevant sources, 
+                    and provide you with a synthesized answer backed by citations.
+                  </p>
+                </div>
               </div>
             )}
 
-            <ChatHistory messages={messages} />
+            <ChatHistory messages={messages} loading={loading} />
           </div>
 
-          <div className="border-t pt-4">
-            <ChatForm onSubmit={handleSendMessage} disabled={loading} />
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Answers may be imperfect. Check sources.
-            </p>
+          <div className="shrink-0 border-t bg-background p-4 md:p-6">
+            <div className="mx-auto max-w-3xl">
+              <ChatForm onSubmit={handleSendMessage} disabled={loading} />
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Answers may be imperfect. Check sources.
+              </p>
+            </div>
           </div>
         </div>
       </SidebarInset>

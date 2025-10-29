@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { webSearch } from "@/lib/search";
 import { scrapeMany } from "@/lib/scrape";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
-import { getDb } from "@/lib/db";
+import { getDb, ensureDbInitialized } from "@/lib/db";
 import { getOrCreateUserInDb } from "@/lib/user";
 import { threads, messages } from "@/lib/schema";
 import { eq, desc } from 'drizzle-orm';
@@ -28,6 +28,7 @@ export const Route = createFileRoute('/api/ask')({
           const body = await request.json();
           const { query, user_id, thread_id } = BodySchema.parse(body);
           const db = getDb();
+          await ensureDbInitialized();
 
           // Ensure user exists
           await getOrCreateUserInDb(user_id);
@@ -76,25 +77,25 @@ export const Route = createFileRoute('/api/ask')({
           const user = buildUserPrompt(query, docs);
 
           // 4) Build conversation history
-          const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+          const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
             { role: 'system', content: system },
           ];
 
           // Add previous messages (they already have user/assistant roles)
           for (const msg of reversedMessages) {
-            messages.push({
+            conversationHistory.push({
               role: msg.role as 'user' | 'assistant',
               content: msg.content,
             });
           }
 
           // Add current query
-          messages.push({ role: 'user', content: user });
+          conversationHistory.push({ role: 'user', content: user });
 
           // 5) Ask LLM
           const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
-            messages,
+            messages: conversationHistory,
             temperature: 0.2,
           });
 

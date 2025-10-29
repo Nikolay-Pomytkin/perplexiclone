@@ -1,0 +1,6 @@
+# Nixpacks configuration for Railway deployment
+# Specifies Node.js 22 (no build dependencies needed with @libsql/client)
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+

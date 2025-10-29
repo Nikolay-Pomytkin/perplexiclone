@@ -2,6 +2,10 @@
   "name": "perplexiclone",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
@@ -13,6 +17,7 @@
     "check": "prettier --write . && eslint --fix"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "@mozilla/readability": "^0.6.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.7",
@@ -26,7 +31,6 @@
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
     "@types/uuid": "^10.0.0",
-    "better-sqlite3": "^12.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.6",

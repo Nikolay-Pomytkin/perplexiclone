@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getDb } from './db';
+import { getDb, ensureDbInitialized } from './db';
 import { users } from './schema';
 import { eq } from 'drizzle-orm';
 
@@ -11,6 +11,7 @@ export function getOrCreateUserId(): string {
 
 export async function getOrCreateUserInDb(userId: string): Promise<string> {
   const db = getDb();
+  await ensureDbInitialized();
   
   const existing = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
 
