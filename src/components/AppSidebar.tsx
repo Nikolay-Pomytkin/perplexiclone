@@ -38,13 +38,13 @@ export function AppSidebar({
 }: AppSidebarProps) {
   return (
     <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader className="shrink-0">
-        <div className="flex items-center justify-between gap-2 px-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center bg-sidebar-primary text-sidebar-primary-foreground">
+      <SidebarHeader className="shrink-0 border-b border-sidebar-border">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-sidebar-primary text-sidebar-primary-foreground">
               <MessageSquare className="h-4 w-4" />
             </div>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden min-w-0">
               <span className="text-sm font-semibold text-sidebar-foreground">Perplexiclone</span>
               <span className="text-xs text-sidebar-foreground/60">Chat</span>
             </div>
@@ -53,7 +53,7 @@ export function AppSidebar({
             onClick={onToggleTheme}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 hover:bg-sidebar-accent text-sidebar-foreground"
+            className="h-8 w-8 shrink-0 hover:bg-sidebar-accent text-sidebar-foreground group-data-[collapsible=icon]:hidden"
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
@@ -65,13 +65,13 @@ export function AppSidebar({
         </div>
       </SidebarHeader>
       
-      <div className="shrink-0 p-2 border-b border-sidebar-border">
+      <div className="shrink-0 p-2 border-b border-sidebar-border group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
         <Button 
           onClick={onNewThread} 
-          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground" 
+          className="w-full group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:p-0 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center" 
           size="sm"
         >
-          <Plus className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
+          <Plus className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2 shrink-0" />
           <span className="group-data-[collapsible=icon]:hidden">New Thread</span>
         </Button>
       </div>
@@ -116,15 +116,15 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="shrink-0 p-2 border-t border-sidebar-border">
+      <SidebarFooter className="shrink-0 p-2 border-t border-sidebar-border group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
         <Button
           onClick={onClearHistory}
           variant="outline"
           disabled={threads.length === 0}
-          className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:px-2 text-destructive hover:bg-destructive/10 hover:text-destructive border-sidebar-border"
+          className="w-full group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:p-0 text-destructive hover:bg-destructive/10 hover:text-destructive border-sidebar-border flex items-center justify-center"
           size="sm"
         >
-          <Trash2 className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2" />
+          <Trash2 className="h-4 w-4 group-data-[collapsible=icon]:mr-0 mr-2 shrink-0" />
           <span className="group-data-[collapsible=icon]:hidden">Clear History</span>
         </Button>
       </SidebarFooter>
