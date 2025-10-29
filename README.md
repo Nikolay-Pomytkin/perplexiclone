@@ -1,301 +1,212 @@
-Welcome to your new TanStack app! 
+# Hanover Perplexity Clone — TanStack Start + TypeScript
 
-# Getting Started
+A minimal Perplexity‑style app: ask a question → perform web search → scrape top pages → synthesize an AI answer with inline numeric citations → render sources list. Built with **TanStack Start + TypeScript + OpenAI SDK** and SerpAPI for web search.
 
-To run this application:
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+- SerpAPI key ([get one here](https://serpapi.com/))
+
+### Setup
+
+1. **Create `.env` file** in the project root:
+
+```bash
+# OpenAI API Key
+OPENAI_API_KEY=sk-your-key-here
+
+# SerpAPI Key
+SERPAPI_API_KEY=your-serpapi-key-here
+```
+
+2. **Install dependencies** (already done):
 
 ```bash
 npm install
-npm run start
 ```
 
-# Building For Production
+The project includes:
+- `openai` - OpenAI SDK for GPT completions
+- `mozilla-readability` - Reader-mode extraction
+- `jsdom` - DOM parsing for scraping
+- `zod` - Schema validation
+- `react-markdown` - Markdown rendering with citations
 
-To build this application for production:
+3. **Run the development server**:
 
 ```bash
-npm run build
+npm run dev
 ```
 
-## Testing
+4. **Open** [http://localhost:3000](http://localhost:3000)
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+---
 
-```bash
-npm run test
+## Project Structure
+
+```
+src/
+  routes/
+    index.tsx                # Main UI page
+    api.ask.ts              # API endpoint: search → scrape → LLM
+  components/
+    ChatForm.tsx            # Question input form
+    Answer.tsx              # Markdown answer display
+    Sources.tsx             # Sources list with links
+  lib/
+    search.ts               # SerpAPI web search adapter
+    scrape.ts               # Readability-based content extraction
+    prompt.ts               # System & user prompt builders
+  types.ts                  # Shared TypeScript types
 ```
 
-## Styling
+---
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## How It Works
 
+1. **User asks a question** via the chat form
+2. **Web search** using SerpAPI to find top 5 relevant pages
+3. **Scrape content** from each page using Mozilla Readability
+4. **Build prompts** with question + numbered source excerpts
+5. **LLM synthesis** using GPT-4o-mini to generate answer with inline `[1]`, `[2]` citations
+6. **Display** the markdown answer and clickable sources list
 
-## Linting & Formatting
+---
 
+## Key Features
 
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
+✅ **Inline citations** - Answer includes `[1]`, `[2]` references  
+✅ **Source attribution** - Numbered list of sources with titles and URLs  
+✅ **Reader-mode scraping** - Clean text extraction from web pages  
+✅ **Error handling** - Graceful fallbacks for failed scrapes  
+✅ **Modern UI** - Tailwind CSS with dark theme
 
-```bash
-npm run lint
-npm run format
-npm run check
-```
+---
 
+## API Route
 
+The API endpoint is at `/api/ask` (TanStack Start API route):
 
-## Routing
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-
-import { Link } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <header>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </header>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
-})
-```
-
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/people",
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
-});
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-### React-Query
-
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
-
-First add your dependencies:
-
-```bash
-npm install @tanstack/react-query @tanstack/react-query-devtools
-```
-
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
-
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-// ...
-
-const queryClient = new QueryClient();
-
-// ...
-
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
+**Request:**
+```json
+POST /api/ask
+{
+  "query": "What is quantum computing?"
 }
 ```
 
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from "@tanstack/react-query";
-
-import "./App.css";
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ["people"],
-    queryFn: () =>
-      fetch("https://swapi.dev/api/people")
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
-  });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
+**Response:**
+```json
+{
+  "answer_md": "Quantum computing is...[1] It uses quantum bits...[2]",
+  "sources": [
+    {
+      "title": "Quantum Computing Explained",
+      "url": "https://example.com/quantum",
+      "snippet": "A brief description..."
+    }
+  ]
 }
-
-export default App;
 ```
 
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
+---
 
-## State Management
+## Environment Variables
 
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes | Your OpenAI API key (starts with `sk-`) |
+| `SERPAPI_API_KEY` | Yes | Your SerpAPI key for web search |
 
-First you need to add TanStack Store as a dependency:
+---
+
+## Tech Stack
+
+- **TanStack Start** - Full-stack React framework with file-based routing
+- **TypeScript** - Type-safe development
+- **OpenAI SDK** - GPT-4o-mini for answer synthesis
+- **SerpAPI** - Google search results
+- **Mozilla Readability** - Article extraction
+- **JSDOM** - HTML parsing
+- **React Markdown** - Markdown rendering
+- **Tailwind CSS v4** - Styling
+- **Zod** - Runtime validation
+
+---
+
+## Nice‑to‑Haves (Future Enhancements)
+
+* **Streaming**: Switch to Server-Sent Events for real-time token streaming
+* **Multiple search providers**: Add Tavily, Bing, Brave as alternatives
+* **Deduping**: Filter duplicate domains, prefer high-quality sources
+* **Citation tooltips**: Hover over `[n]` to preview source URL
+* **Caching**: Add LRU cache or Redis for repeated queries
+* **Safety checks**: Warn if < 2 docs scraped successfully
+* **Tests**: Add Vitest tests for API route and prompt logic
+
+---
+
+## Development Commands
 
 ```bash
-npm install @tanstack/store
+npm run dev          # Start dev server (port 3000)
+npm run build        # Production build
+npm run serve        # Preview production build
+npm run lint         # Run ESLint
+npm run format       # Format with Prettier
+npm run check        # Format + lint fix
 ```
 
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
+---
 
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-import "./App.css";
+## Notes
 
-const countStore = new Store(0);
+- The scraper has an 8-second timeout per URL
+- Only pages with 200+ characters of content are kept
+- Citations are 1-based: `[1]`, `[2]`, `[3]`, etc.
+- The LLM is prompted to be conservative and cite evidence
 
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
-}
+---
 
-export default App;
-```
+## Troubleshooting
 
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
+**"No search provider configured"**  
+→ Make sure `SERPAPI_API_KEY` is set in `.env`
 
-Let's check this out by doubling the count using derived state.
+**"Failed to fetch answer"**  
+→ Check that `OPENAI_API_KEY` is valid and has credits
 
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store, Derived } from "@tanstack/store";
-import "./App.css";
+**No sources returned**  
+→ Query may be too broad or search API rate limited
 
-const countStore = new Store(0);
+**Scraping fails**  
+→ Some sites block bots; we use a Mozilla user agent but results may vary
 
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
+---
 
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
+## License
 
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
+MIT
 
-export default App;
-```
+---
 
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
+## Demo Video
 
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
+Record a 20-120 second demo showing:
+1. Asking a question (e.g., "What is quantum computing?")
+2. Inline citations `[1]`, `[2]` appearing in the answer
+3. The Sources list at the bottom
+4. (Optional) Clicking on a source link
 
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
+---
 
-# Demo files
+## Contact
 
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+For questions or issues, reach out to:
+- **nick@hanoverpark.com**
+- **chris@hanoverpark.com**
